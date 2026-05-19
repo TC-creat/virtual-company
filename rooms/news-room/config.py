@@ -4,6 +4,16 @@
 import os
 from pathlib import Path
 
+# 从 ~/.hermes/.env 加载环境变量（DeepSeek API Key 等）
+_ENV_FILE = Path.home() / ".hermes" / ".env"
+if _ENV_FILE.exists():
+    with open(_ENV_FILE) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _key, _val = _line.split("=", 1)
+                os.environ.setdefault(_key.strip(), _val.strip())
+
 # ── 项目路径 ───────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).parent.resolve()
 DATA_DIR = PROJECT_ROOT / "data"

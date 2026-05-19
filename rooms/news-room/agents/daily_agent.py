@@ -124,6 +124,13 @@ def format_output(items: list[NewsItem], stats: dict, failures: dict, date_str: 
     from formatters.daily_summary import render_wechat_text
     from formatters.daily_detail import render_markdown
 
+    # 补全 formatter 需要的字段名
+    sources_used = {it.source for it in items}
+    stats.setdefault("total_raw", stats.get("raw_count", 0))
+    stats.setdefault("total_filtered", stats.get("filtered_count", 0))
+    stats.setdefault("source_count", len(sources_used))
+    stats.setdefault("date", date_str)
+
     summary_text = render_wechat_text(items, stats)
     detail_md = render_markdown(items, stats, failures)
 

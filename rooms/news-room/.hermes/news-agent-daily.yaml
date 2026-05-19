@@ -1,0 +1,20 @@
+# Hermes Cron 配置 - AI新闻日报
+# 通过 Hermes cron create 注册，使用 wrapper 脚本 + --no-agent 模式
+#
+# 注册命令：
+#   hermes cron create \
+#     --name "AI新闻日报" \
+#     --script news-daily.sh \
+#     --no-agent \
+#     --deliver weixin \
+#     "30 7 * * *"
+#
+# 当前状态：✅ 已注册 (job: 85bc6750683d)
+# 下次运行：2026-05-20T07:30:00+08:00
+
+name: news-agent-daily
+description: "AI新闻日报 - 每日采集HN/arXiv/GitHub/HF的AI相关内容，DeepSeek摘要增强，微信推送"
+schedule: "30 7 * * *"
+deliver: weixin
+script: news-daily.sh
+mode: no-agent

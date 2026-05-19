@@ -31,14 +31,19 @@ def filter_by_time_window(items: List[NewsItem], hours: int = TIME_WINDOW_HOURS)
     kept: List[NewsItem] = []
 
     for item in items:
-        if not item.published_at:
+        pub_str = item.published_at
+        # 论文使用采集时间（arXiv API 返回的是原始提交日期，可能已过数天）
+        if item.source_type == "paper" and item.collected_at:
+            pub_str = item.collected_at
+
+        if not pub_str:
             # 发布时间缺失 —— 无法判断时效，保留
             kept.append(item)
             continue
 
         try:
             # 尝试解析 ISO8601 格式；兼容末尾带 Z / 已有 +00:00 等情况
-            pub_str = item.published_at.strip()
+            pub_str = pub_str.strip()
             # 替换末尾 Z → +00:00（只在尾部替换一次）
             if pub_str.endswith("Z"):
                 pub_str = pub_str[:-1] + "+00:00"
@@ -53,7 +58,7 @@ def filter_by_time_window(items: List[NewsItem], hours: int = TIME_WINDOW_HOURS)
                 pub_str += "+00:00"
             pub_dt = datetime.fromisoformat(pub_str)
         except (ValueError, TypeError) as e:
-            logger.warning("无法解析 published_at [%s]: %s — 保留该条目", item.published_at, e)
+            logger.warning("无法解析 published_at [%s]: %s — 保留该条目", pub_str, e)
             kept.append(item)
             continue
 

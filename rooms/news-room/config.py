@@ -62,7 +62,7 @@ SCORE_WEIGHTS = {
 }
 
 # ── 时间窗口（小时）───────────────────────────────────
-TIME_WINDOW_HOURS = 24
+TIME_WINDOW_HOURS = 72
 
 # ── DeepSeek 配置 ─────────────────────────────────────
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")

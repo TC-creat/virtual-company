@@ -33,8 +33,14 @@ AUTHORITY_MAP: dict[str, float] = {
 
 
 def _parse_published_at(item: NewsItem) -> Optional[datetime]:
-    """尝试解析 published_at 为 datetime 对象；失败返回 None。"""
+    """尝试解析 published_at 为 datetime 对象；失败返回 None。
+
+    论文优先使用 collected_at（arXiv 的 published 是原始提交日期，
+    而 collected_at 反映我们何时从 API 发现该论文）。
+    """
     raw = item.published_at
+    if item.source_type == "paper" and item.collected_at:
+        raw = item.collected_at
     if not raw:
         return None
     try:
@@ -152,15 +158,43 @@ def score_items(items: List[NewsItem]) -> List[NewsItem]:
 
 
 def select_top(items: List[NewsItem], k: Optional[int] = None) -> List[NewsItem]:
-    """筛选 Top-K 条目。
+    """筛选 Top-K 条目，确保跨源多样性（每种源至少 1 条）。
 
     Args:
         items: 已评分排序的条目列表
         k: 保留条数。为 None 时不截断（返回全部）
 
     Returns:
-        评分最高的 k 条；若 items 未排序则不会重新排序。
+        评分最高的 k 条，保证每种 source_type 至少 1 条入选；
+        若 items 未排序则不会重新排序。
     """
     if k is None or k < 1:
         return items
-    return items[:k]
+    if len(items) <= k:
+        return items
+
+    selected: List[NewsItem] = []
+    remaining = list(items)
+    MIN_PER_TYPE = 2  # 每种 source_type 至少入选的条数
+
+    # 每种 source_type 至少选 MIN_PER_TYPE 条
+    type_counts: dict[str, int] = {}
+    for item in items:
+        st = (item.source_type or "").strip().lower()
+        if not st:
+            continue
+        count = type_counts.get(st, 0)
+        if count < MIN_PER_TYPE:
+            selected.append(item)
+            type_counts[st] = count + 1
+        if len(selected) >= k:
+            return selected
+
+    # 从剩余中按分数补足
+    for item in items:
+        if item not in selected:
+            selected.append(item)
+            if len(selected) >= k:
+                break
+
+    return selected[:k]
